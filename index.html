@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#246b55" />
+    <title>Plano de Dias Uteis 2026</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">19/05/2026 a 31/12/2026</p>
+        <h1>Meu ano util</h1>
+      </div>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Modo escuro</button>
+        <button class="install-button" id="installBtn" type="button" hidden>Instalar app</button>
+        <button class="icon-button" id="exportBtn" type="button" title="Exportar dados" aria-label="Exportar dados">⬇</button>
+        <label class="icon-button file-action" title="Importar dados" aria-label="Importar dados">
+          ⬆
+          <input id="importInput" type="file" accept="application/json" />
+        </label>
+        <button class="primary-button" id="todayBtn" type="button">Hoje</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="summary-strip" aria-label="Resumo do ano">
+        <article class="metric">
+          <span>Dias uteis no periodo</span>
+          <strong id="businessRemaining">0</strong>
+          <small id="businessDone">0 concluidos</small>
+        </article>
+        <article class="metric">
+          <span>Treinos restantes</span>
+          <strong id="workoutsRemaining">0</strong>
+          <small id="workoutsDone">0 feitos</small>
+        </article>
+        <article class="metric">
+          <span>Kung fu restante</span>
+          <strong id="kungFuRemaining">0</strong>
+          <small id="kungFuDone">0 aulas</small>
+        </article>
+        <article class="metric">
+          <span>Escola restante</span>
+          <strong id="schoolRemaining">0</strong>
+          <small id="schoolDone">0 presencas</small>
+        </article>
+        <article class="metric">
+          <span>Progresso util</span>
+          <strong id="progressPercent">0%</strong>
+          <small id="dateRange">ate 31/12</small>
+        </article>
+      </section>
+
+      <section class="layout-grid">
+        <aside class="side-panel" aria-label="Configuracoes e contadores">
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Treinos por semana</h2>
+              <button class="ghost-button" id="resetScheduleBtn" type="button">Padrao</button>
+            </div>
+            <div class="weekday-editor" id="weekdayEditor"></div>
+          </div>
+
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Restantes por treino</h2>
+            </div>
+            <div class="workout-list" id="workoutStats"></div>
+          </div>
+
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Kung fu</h2>
+            </div>
+            <div class="workout-list" id="kungFuStats"></div>
+          </div>
+
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Campos diarios</h2>
+            </div>
+            <form class="field-form" id="fieldForm">
+              <input id="fieldName" type="text" placeholder="Ex.: leitura, dieta, sono" maxlength="28" required />
+              <select id="fieldType" aria-label="Tipo do campo">
+                <option value="checkbox">Sim/nao</option>
+                <option value="text">Texto</option>
+                <option value="number">Numero</option>
+              </select>
+              <button class="primary-button" type="submit">Adicionar</button>
+            </form>
+            <div class="custom-fields" id="customFields"></div>
+          </div>
+        </aside>
+
+        <section class="calendar-panel" aria-label="Calendario do ano">
+          <div class="toolbar">
+            <div class="segmented" role="tablist" aria-label="Filtro">
+              <button class="active" data-filter="all" type="button">Todos</button>
+              <button data-filter="pending" type="button">Pendentes</button>
+              <button data-filter="done" type="button">Feitos</button>
+            </div>
+            <input id="searchInput" type="search" placeholder="Buscar treino ou observacao" />
+          </div>
+          <div id="calendar" class="calendar"></div>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="dayDialog">
+      <form method="dialog" class="dialog-card" id="dayForm">
+        <div class="dialog-header">
+          <div>
+            <p id="dialogWeekday" class="eyebrow"></p>
+            <h2 id="dialogTitle"></h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" aria-label="Fechar">×</button>
+        </div>
+
+        <div class="dialog-grid">
+          <label class="switch-row">
+            <input id="gymCheck" type="checkbox" />
+            <span>Fui a academia</span>
+          </label>
+          <label class="switch-row">
+            <input id="kungFuCheck" type="checkbox" />
+            <span>Fui ao kung fu</span>
+          </label>
+          <label class="switch-row">
+            <input id="schoolCheck" type="checkbox" />
+            <span>Fui a escola</span>
+          </label>
+        </div>
+
+        <label class="field-block">
+          <span>Treino do dia</span>
+          <input id="workoutInput" type="text" placeholder="Ex.: peito e triceps" />
+        </label>
+
+        <div id="dynamicFields" class="dynamic-fields"></div>
+
+        <label class="field-block">
+          <span>Observacoes</span>
+          <textarea id="notesInput" rows="4" placeholder="Como foi o dia? Algo importante?"></textarea>
+        </label>
+
+        <menu class="dialog-actions">
+          <button class="ghost-button" id="clearDayBtn" type="button">Limpar dia</button>
+          <button class="primary-button" id="saveDayBtn" value="default" type="submit">Salvar</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
