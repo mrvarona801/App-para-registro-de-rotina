@@ -45,36 +45,7 @@ Isso significa:
 - Para fazer backup, use o botao de exportar.
 - Para restaurar em outro dispositivo, use o botao de importar.
 
-## Como publicar no GitHub Pages
-
-O GitHub Pages publica o site em um link `https://`, mesmo sem dominio proprio.
-
-Passos gerais:
-
-1. Crie uma conta no GitHub, se ainda nao tiver.
-2. Crie um novo repositorio, por exemplo: `meu-ano-util`.
-3. Envie estes arquivos para o repositorio:
-   - `index.html`
-   - `styles.css`
-   - `app.js`
-   - `manifest.webmanifest`
-   - `sw.js`
-   - pasta `icons`
-4. No GitHub, entre em `Settings`.
-5. Va em `Pages`.
-6. Em `Build and deployment`, selecione:
-   - Source: `Deploy from a branch`
-   - Branch: `main`
-   - Folder: `/root`
-7. Salve.
-8. O GitHub vai gerar um link parecido com:
-   `https://seu-usuario.github.io/meu-ano-util/`
-
-Depois disso, voce pode abrir esse link no PC, celular ou tablet.
-
 ## Usando no celular
-
-Depois de publicar no GitHub Pages:
 
 1. Abra o link no navegador do celular.
 2. Use normalmente pelo navegador.
