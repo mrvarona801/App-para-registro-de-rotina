@@ -187,7 +187,8 @@ body.dark-mode .metric {
 .weekday-editor,
 .workout-list,
 .custom-fields,
-.dynamic-fields {
+.dynamic-fields,
+.settings-list {
   display: grid;
   gap: 8px;
 }
@@ -247,6 +248,30 @@ body.dark-mode .metric {
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr 112px;
+}
+
+.setting-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.setting-row span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.setting-row select {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  min-height: 40px;
+  padding: 8px 10px;
+  width: 100%;
 }
 
 .field-form button {
@@ -536,6 +561,10 @@ dialog::backdrop {
   padding: 12px;
 }
 
+.compact-switch {
+  min-height: 46px;
+}
+
 body.dark-mode dialog {
   background: var(--paper);
   color: var(--ink);
@@ -576,6 +605,13 @@ body.dark-mode dialog {
   color: var(--muted);
   padding: 16px;
   text-align: center;
+}
+
+.status-text {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin: 0;
 }
 
 @media (max-width: 980px) {

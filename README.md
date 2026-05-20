@@ -13,6 +13,11 @@ Site simples para acompanhar dias uteis, academia, escola, kung fu e observacoes
 - Permite configurar treinos de academia por dia da semana.
 - Mostra quantos treinos ainda faltam por grupo muscular.
 - Mostra contadores gerais na parte de cima da tela.
+- Abre o dia atual automaticamente para preencher os dados.
+- Mostra quantos dias se passaram desde o inicio.
+- Mostra quantos dias foram completos e quantos ficaram como fracasso.
+- Permite configurar o criterio de fracasso.
+- Pode pedir permissao para lembrar o preenchimento as 20h.
 - Tem modo claro e modo escuro.
 - Permite adicionar campos diarios personalizados.
 - Tem campo de observacoes em cada dia.
@@ -40,6 +45,33 @@ Isso significa:
 - Para fazer backup, use o botao de exportar.
 - Para restaurar em outro dispositivo, use o botao de importar.
 
+## Como publicar no GitHub Pages
+
+O GitHub Pages publica o site em um link `https://`, mesmo sem dominio proprio.
+
+Passos gerais:
+
+1. Crie uma conta no GitHub, se ainda nao tiver.
+2. Crie um novo repositorio, por exemplo: `meu-ano-util`.
+3. Envie estes arquivos para o repositorio:
+   - `index.html`
+   - `styles.css`
+   - `app.js`
+   - `manifest.webmanifest`
+   - `sw.js`
+   - pasta `icons`
+4. No GitHub, entre em `Settings`.
+5. Va em `Pages`.
+6. Em `Build and deployment`, selecione:
+   - Source: `Deploy from a branch`
+   - Branch: `main`
+   - Folder: `/root`
+7. Salve.
+8. O GitHub vai gerar um link parecido com:
+   `https://seu-usuario.github.io/meu-ano-util/`
+
+Depois disso, voce pode abrir esse link no PC, celular ou tablet.
+
 ## Usando no celular
 
 Depois de publicar no GitHub Pages:
@@ -55,3 +87,5 @@ Depois de publicar no GitHub Pages:
 ## Observacao importante
 
 Cada navegador e cada dispositivo tem seu proprio armazenamento local. O site nao sincroniza automaticamente entre PC e celular. A sincronizacao, por enquanto, e feita exportando e importando o arquivo `.json`.
+
+As notificacoes dependem das permissoes do navegador. Sem servidor de notificacao, o lembrete funciona melhor quando o site/app esta aberto ou quando o navegador permite manter o app ativo.

@@ -42,6 +42,13 @@ const defaultState = {
   days: {},
   filter: "all",
   theme: "light",
+  failureMode: "all",
+  includeOptionalKungFu: false,
+  autoOpenToday: true,
+  reminderEnabled: false,
+  reminderHour: 20,
+  lastAutoOpenedDate: "",
+  lastReminderDate: "",
 };
 
 let state = loadState();
@@ -49,8 +56,12 @@ let selectedDate = null;
 let deferredInstallPrompt = null;
 
 const el = {
-  businessRemaining: document.querySelector("#businessRemaining"),
-  businessDone: document.querySelector("#businessDone"),
+  elapsedDays: document.querySelector("#elapsedDays"),
+  currentDayLabel: document.querySelector("#currentDayLabel"),
+  completeDays: document.querySelector("#completeDays"),
+  completeDaysDetail: document.querySelector("#completeDaysDetail"),
+  failedDays: document.querySelector("#failedDays"),
+  failedDaysDetail: document.querySelector("#failedDaysDetail"),
   workoutsRemaining: document.querySelector("#workoutsRemaining"),
   workoutsDone: document.querySelector("#workoutsDone"),
   kungFuRemaining: document.querySelector("#kungFuRemaining"),
@@ -69,6 +80,12 @@ const el = {
   searchInput: document.querySelector("#searchInput"),
   themeToggle: document.querySelector("#themeToggle"),
   installBtn: document.querySelector("#installBtn"),
+  failureMode: document.querySelector("#failureMode"),
+  includeOptionalCheck: document.querySelector("#includeOptionalCheck"),
+  autoOpenTodayCheck: document.querySelector("#autoOpenTodayCheck"),
+  reminderCheck: document.querySelector("#reminderCheck"),
+  notificationBtn: document.querySelector("#notificationBtn"),
+  notificationStatus: document.querySelector("#notificationStatus"),
   dayDialog: document.querySelector("#dayDialog"),
   dayForm: document.querySelector("#dayForm"),
   dialogWeekday: document.querySelector("#dialogWeekday"),
@@ -133,6 +150,27 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+function addDays(date, amount) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function diffDays(start, end) {
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  return Math.floor((endUtc - startUtc) / 86400000);
+}
+
+function todayKey() {
+  const today = new Date();
+  const start = parseDate(START_DATE);
+  const end = parseDate(END_DATE);
+  if (today < start) return START_DATE;
+  if (today > end) return END_DATE;
+  return formatDate(today);
+}
+
 function displayDate(value) {
   const date = parseDate(value);
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -181,22 +219,46 @@ function isSchoolDone(key) {
 }
 
 function isDayComplete(date) {
-  const key = formatDate(date);
-  const hasWorkout = Boolean(workoutFor(date));
+  return dayStatus(date).complete;
+}
+
+function plannedGoals(date) {
+  const goals = [];
   const kungFu = kungFuFor(date);
-  const needsKungFu = Boolean(kungFu && !kungFu.optional);
-  const needsSchool = isBusinessDay(date);
-  return (!hasWorkout || isGymDone(key)) && (!needsKungFu || isKungFuDone(key)) && (!needsSchool || isSchoolDone(key));
+  if (workoutFor(date)) goals.push({ id: "gym", done: isGymDone(formatDate(date)) });
+  if (isBusinessDay(date)) goals.push({ id: "school", done: isSchoolDone(formatDate(date)) });
+  if (kungFu && (!kungFu.optional || state.includeOptionalKungFu)) {
+    goals.push({ id: "kungFu", done: isKungFuDone(formatDate(date)) });
+  }
+  return goals;
+}
+
+function dayStatus(date) {
+  const goals = plannedGoals(date);
+  const doneCount = goals.filter((goal) => goal.done).length;
+  const hasGoals = goals.length > 0;
+  const complete = hasGoals && (state.failureMode === "any" ? doneCount > 0 : doneCount === goals.length);
+  const failed = hasGoals && !complete;
+  return { complete, failed, total: goals.length, done: doneCount };
 }
 
 function render() {
   applyTheme();
+  renderSettings();
   renderWeekdayEditor();
   renderCustomFields();
   renderSummary();
   renderWorkoutStats();
   renderKungFuStats();
   renderCalendar();
+  updateNotificationStatus();
+}
+
+function renderSettings() {
+  el.failureMode.value = state.failureMode;
+  el.includeOptionalCheck.checked = Boolean(state.includeOptionalKungFu);
+  el.autoOpenTodayCheck.checked = Boolean(state.autoOpenToday);
+  el.reminderCheck.checked = Boolean(state.reminderEnabled);
 }
 
 function renderWeekdayEditor() {
@@ -250,9 +312,14 @@ function renderCustomFields() {
 
 function renderSummary() {
   const dates = getDates();
+  const today = parseDate(todayKey());
+  const elapsed = Math.max(0, diffDays(parseDate(START_DATE), today));
+  const evaluatedDates = dates.filter((date) => date < today);
+  const evaluatedWithGoals = evaluatedDates.filter((date) => plannedGoals(date).length > 0);
+  const completeCount = evaluatedWithGoals.filter((date) => dayStatus(date).complete).length;
+  const failedCount = evaluatedWithGoals.filter((date) => dayStatus(date).failed).length;
   const businessDates = dates.filter(isBusinessDay);
   const businessRemaining = businessDates.filter((date) => !isDayComplete(date)).length;
-  const businessDone = businessDates.length - businessRemaining;
   const workoutDates = dates.filter((date) => Boolean(workoutFor(date)));
   const workoutRemaining = workoutDates.filter((date) => !isGymDone(formatDate(date))).length;
   const workoutDone = workoutDates.length - workoutRemaining;
@@ -264,10 +331,12 @@ function renderSummary() {
   const kungFuDone = kungFuDates.filter((date) => isKungFuDone(formatDate(date))).length;
   const schoolRemaining = businessDates.filter((date) => !isSchoolDone(formatDate(date))).length;
   const schoolDone = businessDates.length - schoolRemaining;
-  const progress = businessDates.length ? Math.round((businessDone / businessDates.length) * 100) : 0;
-
-  el.businessRemaining.textContent = businessDates.length;
-  el.businessDone.textContent = `${businessRemaining} ainda sem registro completo`;
+  el.elapsedDays.textContent = elapsed;
+  el.currentDayLabel.textContent = `Hoje: ${displayDate(todayKey())}`;
+  el.completeDays.textContent = completeCount;
+  el.completeDaysDetail.textContent = `${evaluatedWithGoals.length} dias avaliados`;
+  el.failedDays.textContent = failedCount;
+  el.failedDaysDetail.textContent = `${businessRemaining} dias uteis ainda incompletos`;
   el.workoutsRemaining.textContent = workoutRemaining;
   el.workoutsDone.textContent = `${workoutDone} feitos de ${workoutDates.length}`;
   el.kungFuRemaining.textContent = kungFuRemaining;
@@ -368,13 +437,14 @@ function renderCalendar() {
 
 function createDayCard(date) {
   const key = formatDate(date);
+  const currentToday = todayKey();
   const record = dayRecord(key);
   const workout = workoutFor(date);
   const kungFu = kungFuFor(date);
   const business = isBusinessDay(date);
   const card = document.createElement("button");
   card.type = "button";
-  card.className = ["day-card", key === START_DATE ? "today" : "", !business ? "weekend" : "", isDayComplete(date) ? "done" : ""]
+  card.className = ["day-card", key === currentToday ? "today" : "", !business ? "weekend" : "", isDayComplete(date) ? "done" : ""]
     .filter(Boolean)
     .join(" ");
   card.dataset.date = key;
@@ -523,8 +593,10 @@ function importData(file) {
 }
 
 document.querySelector("#todayBtn").addEventListener("click", () => {
-  const todayCard = document.querySelector(`[data-date="${START_DATE}"]`);
+  const currentToday = todayKey();
+  const todayCard = document.querySelector(`[data-date="${currentToday}"]`);
   todayCard?.scrollIntoView({ behavior: "smooth", block: "center" });
+  openDay(currentToday);
 });
 
 document.querySelector("#resetScheduleBtn").addEventListener("click", () => {
@@ -538,6 +610,33 @@ el.themeToggle.addEventListener("click", () => {
   saveState();
   applyTheme();
 });
+
+el.failureMode.addEventListener("change", () => {
+  state.failureMode = el.failureMode.value;
+  saveState();
+  render();
+});
+
+el.includeOptionalCheck.addEventListener("change", () => {
+  state.includeOptionalKungFu = el.includeOptionalCheck.checked;
+  saveState();
+  render();
+});
+
+el.autoOpenTodayCheck.addEventListener("change", () => {
+  state.autoOpenToday = el.autoOpenTodayCheck.checked;
+  saveState();
+  render();
+});
+
+el.reminderCheck.addEventListener("change", () => {
+  state.reminderEnabled = el.reminderCheck.checked;
+  saveState();
+  updateNotificationStatus();
+  if (state.reminderEnabled) requestNotificationPermission();
+});
+
+el.notificationBtn.addEventListener("click", requestNotificationPermission);
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
@@ -581,9 +680,83 @@ el.dayForm.addEventListener("submit", (event) => {
 });
 
 render();
+focusTodayOnStart();
+startReminderLoop();
 
 if ("serviceWorker" in navigator && ["http:", "https:"].includes(location.protocol)) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
+}
+
+function focusTodayOnStart() {
+  const currentToday = todayKey();
+  requestAnimationFrame(() => {
+    document.querySelector(`[data-date="${currentToday}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (state.autoOpenToday && state.lastAutoOpenedDate !== currentToday) {
+      state.lastAutoOpenedDate = currentToday;
+      saveState();
+      openDay(currentToday);
+    }
+  });
+}
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    updateNotificationStatus("Este navegador nao liberou notificacoes.");
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  updateNotificationStatus(permission === "granted" ? "Lembrete liberado para as 20h." : "Permissao de notificacao negada.");
+}
+
+function updateNotificationStatus(message) {
+  if (message) {
+    el.notificationStatus.textContent = message;
+    return;
+  }
+  if (!state.reminderEnabled) {
+    el.notificationStatus.textContent = "Notificacoes desativadas.";
+    return;
+  }
+  if (!("Notification" in window)) {
+    el.notificationStatus.textContent = "Notificacoes indisponiveis neste navegador.";
+    return;
+  }
+  el.notificationStatus.textContent =
+    Notification.permission === "granted" ? "Lembrete ativo para as 20h." : "Ative a permissao para receber lembretes.";
+}
+
+function startReminderLoop() {
+  checkReminder();
+  setInterval(checkReminder, 60000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) checkReminder();
+  });
+}
+
+async function checkReminder() {
+  if (!state.reminderEnabled || !("Notification" in window) || Notification.permission !== "granted") return;
+  const now = new Date();
+  const currentToday = todayKey();
+  if (now.getHours() < state.reminderHour || state.lastReminderDate === currentToday) return;
+  if (isDayComplete(parseDate(currentToday))) return;
+
+  state.lastReminderDate = currentToday;
+  saveState();
+  const title = "Preencher rotina de hoje";
+  const options = {
+    body: "Registre academia, escola, kung fu e observacoes do dia.",
+    tag: `rotina-${currentToday}`,
+    icon: "icons/icon-192.png",
+  };
+
+  if ("serviceWorker" in navigator) {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration?.showNotification) {
+      registration.showNotification(title, options);
+      return;
+    }
+  }
+  new Notification(title, options);
 }

@@ -30,9 +30,19 @@
     <main class="app-shell">
       <section class="summary-strip" aria-label="Resumo do ano">
         <article class="metric">
-          <span>Dias uteis no periodo</span>
-          <strong id="businessRemaining">0</strong>
-          <small id="businessDone">0 concluidos</small>
+          <span>Dias passados</span>
+          <strong id="elapsedDays">0</strong>
+          <small id="currentDayLabel">Hoje</small>
+        </article>
+        <article class="metric">
+          <span>Dias completos</span>
+          <strong id="completeDays">0</strong>
+          <small id="completeDaysDetail">0 avaliados</small>
+        </article>
+        <article class="metric">
+          <span>Fracassos</span>
+          <strong id="failedDays">0</strong>
+          <small id="failedDaysDetail">0 parciais ou vazios</small>
         </article>
         <article class="metric">
           <span>Treinos restantes</span>
@@ -48,11 +58,6 @@
           <span>Escola restante</span>
           <strong id="schoolRemaining">0</strong>
           <small id="schoolDone">0 presencas</small>
-        </article>
-        <article class="metric">
-          <span>Progresso util</span>
-          <strong id="progressPercent">0%</strong>
-          <small id="dateRange">ate 31/12</small>
         </article>
       </section>
 
@@ -78,6 +83,43 @@
               <h2>Kung fu</h2>
             </div>
             <div class="workout-list" id="kungFuStats"></div>
+          </div>
+
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Evolucao</h2>
+            </div>
+            <div class="settings-list">
+              <label class="setting-row">
+                <span>Fracasso quando</span>
+                <select id="failureMode">
+                  <option value="all">Nao cumprir todas as metas</option>
+                  <option value="any">Nao fazer nenhuma atividade</option>
+                </select>
+              </label>
+              <label class="switch-row compact-switch">
+                <input id="includeOptionalCheck" type="checkbox" />
+                <span>Contar sabado opcional como meta</span>
+              </label>
+              <label class="switch-row compact-switch">
+                <input id="autoOpenTodayCheck" type="checkbox" />
+                <span>Abrir o dia atual automaticamente</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="section-title">
+              <h2>Lembrete</h2>
+            </div>
+            <div class="settings-list">
+              <label class="switch-row compact-switch">
+                <input id="reminderCheck" type="checkbox" />
+                <span>Lembrar as 20h</span>
+              </label>
+              <button class="ghost-button" id="notificationBtn" type="button">Permitir notificacoes</button>
+              <p class="status-text" id="notificationStatus">Notificacoes desativadas.</p>
+            </div>
           </div>
 
           <div class="panel-section">
