@@ -1,6 +1,7 @@
 const START_DATE = "2026-05-19";
 const END_DATE = "2026-12-31";
 const STORAGE_KEY = "ano-util-2026:v1";
+const APP_VERSION = "1.4";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const FULL_WEEKDAYS = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
@@ -36,6 +37,7 @@ const defaultKungFuSchedule = {
 };
 
 const defaultState = {
+  appVersion: APP_VERSION,
   schedule: defaultSchedule,
   kungFuSchedule: defaultKungFuSchedule,
   fields: [],
@@ -101,22 +103,77 @@ const el = {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved) return structuredClone(defaultState);
-    return {
-      ...structuredClone(defaultState),
-      ...saved,
-      schedule: { ...defaultSchedule, ...(saved.schedule || {}) },
-      kungFuSchedule: normalizeKungFuSchedule(saved.kungFuSchedule),
-      fields: Array.isArray(saved.fields) ? saved.fields : [],
-      days: saved.days || {},
-    };
+    if (!saved) return migrateState();
+    return migrateState(saved);
   } catch {
-    return structuredClone(defaultState);
+    return migrateState();
   }
 }
 
 function saveState() {
+  state.appVersion = APP_VERSION;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function migrateState(raw = {}) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  return {
+    ...structuredClone(defaultState),
+    ...source,
+    appVersion: APP_VERSION,
+    schedule: normalizeSchedule(source.schedule),
+    kungFuSchedule: normalizeKungFuSchedule(source.kungFuSchedule),
+    fields: normalizeFields(source.fields),
+    days: normalizeDays(source.days),
+    failureMode: source.failureMode === "any" ? "any" : "all",
+    includeOptionalKungFu: Boolean(source.includeOptionalKungFu),
+    autoOpenToday: source.autoOpenToday !== false,
+    reminderEnabled: Boolean(source.reminderEnabled),
+    reminderHour: Number.isFinite(Number(source.reminderHour)) ? Number(source.reminderHour) : 20,
+  };
+}
+
+function normalizeSchedule(saved = {}) {
+  return { ...defaultSchedule, ...(saved && typeof saved === "object" ? saved : {}) };
+}
+
+function normalizeFields(saved = []) {
+  if (!Array.isArray(saved)) return [];
+  const labels = { checkbox: "Sim/nao", text: "Texto", number: "Numero" };
+  return saved
+    .filter((field) => field && typeof field === "object" && field.name)
+    .map((field) => {
+      const type = ["checkbox", "text", "number"].includes(field.type) ? field.type : "checkbox";
+      return {
+        ...field,
+        id: field.id || crypto.randomUUID(),
+        name: String(field.name),
+        type,
+        typeLabel: field.typeLabel || labels[type],
+      };
+    });
+}
+
+function normalizeDays(saved = {}) {
+  if (!saved || typeof saved !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(saved)
+      .filter(([key]) => /^\d{4}-\d{2}-\d{2}$/.test(key))
+      .map(([key, record]) => [key, normalizeDayRecord(record)])
+  );
+}
+
+function normalizeDayRecord(record = {}) {
+  const source = record && typeof record === "object" ? record : {};
+  return {
+    ...source,
+    gym: Boolean(source.gym),
+    kungFu: Boolean(source.kungFu),
+    school: Boolean(source.school),
+    workout: typeof source.workout === "string" ? source.workout : "",
+    notes: typeof source.notes === "string" ? source.notes : "",
+    extra: source.extra && typeof source.extra === "object" ? { ...source.extra } : {},
+  };
 }
 
 function applyTheme() {
@@ -192,7 +249,7 @@ function isBusinessDay(date) {
 }
 
 function dayRecord(dateKey) {
-  return state.days[dateKey] || {};
+  return state.days[dateKey] || normalizeDayRecord();
 }
 
 function workoutFor(date) {
@@ -263,7 +320,7 @@ function renderSettings() {
 
 function renderWeekdayEditor() {
   el.weekdayEditor.innerHTML = "";
-  for (let day = 1; day <= 5; day += 1) {
+  for (let day = 1; day <= 6; day += 1) {
     const row = document.createElement("label");
     row.className = "weekday-row";
     row.innerHTML = `<span>${FULL_WEEKDAYS[day]}</span>`;
@@ -560,7 +617,8 @@ function addField(event) {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const exportState = migrateState(state);
+  const blob = new Blob([JSON.stringify(exportState, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -575,14 +633,7 @@ function importData(file) {
   reader.addEventListener("load", () => {
     try {
       const imported = JSON.parse(reader.result);
-      state = {
-        ...structuredClone(defaultState),
-        ...imported,
-        schedule: { ...defaultSchedule, ...(imported.schedule || {}) },
-        kungFuSchedule: normalizeKungFuSchedule(imported.kungFuSchedule),
-        fields: Array.isArray(imported.fields) ? imported.fields : [],
-        days: imported.days || {},
-      };
+      state = migrateState(imported);
       saveState();
       render();
     } catch {

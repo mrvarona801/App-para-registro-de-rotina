@@ -413,12 +413,18 @@ body.dark-mode .metric {
 }
 
 .badge {
+  align-items: center;
   background: var(--control-bg);
   border-radius: 999px;
   color: var(--muted);
+  display: inline-flex;
   font-size: 0.73rem;
   font-weight: 750;
-  padding: 4px 8px;
+  justify-content: center;
+  line-height: 1;
+  min-height: 26px;
+  padding: 0 9px;
+  text-align: center;
 }
 
 .badge.good {

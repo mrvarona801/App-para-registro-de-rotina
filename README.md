@@ -1,62 +1,91 @@
 # Meu Ano Util
 
-Site simples para acompanhar dias uteis, academia, escola, kung fu e observacoes de `19/05/2026` ate `31/12/2026`.
+Site pessoal para acompanhar dias uteis, academia, escola, kung fu, tarefas e observacoes de `19/05/2026` ate `31/12/2026`.
 
-## O que funciona nesta versao
+## Recursos Atuais
 
+- Abre e destaca automaticamente o dia atual.
 - Mostra todos os dias do periodo.
-- Conta dias uteis sem incluir sabado e domingo.
-- Permite registrar, por dia, se voce foi para a academia.
-- Permite registrar, por dia, se voce foi para a escola.
-- Permite registrar kung fu em quarta, sexta e sabado.
-- Conta sabado de kung fu como opcional.
-- Permite configurar treinos de academia por dia da semana.
-- Mostra quantos treinos ainda faltam por grupo muscular.
-- Mostra contadores gerais na parte de cima da tela.
-- Abre o dia atual automaticamente para preencher os dados.
-- Mostra quantos dias se passaram desde o inicio.
-- Mostra quantos dias foram completos e quantos ficaram como fracasso.
+- Conta dias uteis sem incluir domingo.
+- Permite configurar treinos/tarefas de segunda a sabado.
+- Permite registrar academia, escola e kung fu por dia.
+- Mantem o sabado de kung fu como opcional, se desejado.
+- Mostra contadores de dias passados, dias completos e fracassos.
 - Permite configurar o criterio de fracasso.
-- Pode pedir permissao para lembrar o preenchimento as 20h.
 - Tem modo claro e modo escuro.
 - Permite adicionar campos diarios personalizados.
 - Tem campo de observacoes em cada dia.
-- Permite exportar e importar dados em `.json`.
+- Exporta e importa backup em `.json`.
 
-## Como abrir no computador
+## Como Usar
 
-Abra o arquivo `index.html` em um navegador.
+Abra o `index.html` em um navegador ou use a versao publicada do site.
 
-Arquivos principais:
+Para registrar um dia:
 
-- `index.html`
-- `styles.css`
-- `app.js`
+1. Clique no card do dia ou use o botao `Hoje`.
+2. Marque academia, kung fu e/ou escola.
+3. Ajuste o treino do dia, se precisar.
+4. Escreva observacoes.
+5. Clique em `Salvar`.
 
-## Onde os dados ficam salvos
+## Backup
 
-Os dados ficam salvos no navegador, usando `localStorage`.
+Use o botao de exportar para salvar um arquivo `.json` com seus dados.
+
+Use o botao de importar para restaurar esse arquivo no mesmo navegador ou em outro dispositivo.
+
+O importador tenta preservar dados de versoes antigas, incluindo observacoes, campos extras e registros feitos em cada data.
+
+## Dados Salvos
+
+Os dados ficam no `localStorage` do navegador.
 
 Isso significa:
 
-- Se voce usar no Opera do PC, os dados ficam no Opera desse PC.
-- Se voce abrir no celular, os dados do celular serao separados.
-- Se limpar os dados do navegador, pode perder os registros.
-- Para fazer backup, use o botao de exportar.
-- Para restaurar em outro dispositivo, use o botao de importar.
+- Cada navegador tem seus proprios dados.
+- Cada dispositivo tem seus proprios dados.
+- Limpar dados do navegador pode apagar os registros.
+- Para migrar entre PC e celular, exporte no dispositivo antigo e importe no novo.
 
-## Usando no celular
+## Notas de Versao
 
-1. Abra o link no navegador do celular.
-2. Use normalmente pelo navegador.
-3. Para levar seus dados do PC para o celular:
-   - Exporte os dados no PC.
-   - Envie o arquivo `.json` para o celular.
-   - Abra o site no celular.
-   - Importe o arquivo.
+### 1.0
 
-## Observacao importante
+- Criacao da primeira versao do app.
+- Calendario de `19/05/2026` ate `31/12/2026`.
+- Contagem de dias uteis.
+- Registro de academia e escola.
+- Observacoes por dia.
+- Configuracao dos treinos de segunda a sexta.
+- Exportacao e importacao basica de dados.
 
-Cada navegador e cada dispositivo tem seu proprio armazenamento local. O site nao sincroniza automaticamente entre PC e celular. A sincronizacao, por enquanto, e feita exportando e importando o arquivo `.json`.
+### 1.1
 
-As notificacoes dependem das permissoes do navegador. Sem servidor de notificacao, o lembrete funciona melhor quando o site/app esta aberto ou quando o navegador permite manter o app ativo.
+- Adicionado kung fu.
+- Quarta e sexta contam como compromisso de kung fu.
+- Sabado entrou como kung fu opcional.
+- Adicionados contadores separados de kung fu.
+
+### 1.2
+
+- Adicionado modo escuro.
+- Preferencia de tema passou a ser salva no navegador.
+- Melhorias visuais na HUD.
+
+### 1.3
+
+- Dia atual passou a abrir automaticamente.
+- Botao `Hoje` passou a levar ao dia real.
+- Adicionados contadores de dias passados, dias completos e fracassos.
+- Adicionada configuracao do criterio de fracasso.
+- Adicionado lembrete de preenchimento as 20h, dependendo das permissoes do navegador.
+
+### 1.4
+
+- Sabado passou a ser configuravel como dia de treino/tarefa, assim como segunda a sexta.
+- Domingo continua fora da configuracao principal.
+- Badges/pilulas dos cards foram alinhados visualmente.
+- Exportacao passou a incluir metadados de versao.
+- Importacao foi reforcada para preservar registros de versoes antigas.
+- Observacoes, campos extras e dados de cada dia sao normalizados ao importar para evitar perda de dados.
