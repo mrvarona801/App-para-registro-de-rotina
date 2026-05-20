@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#246b55" />
-    <title>Plano de Dias Uteis 2026</title>
+    <title>Plano de Dias Úteis 2026</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
@@ -13,14 +13,14 @@
     <header class="app-header">
       <div>
         <p class="eyebrow">19/05/2026 a 31/12/2026</p>
-        <h1>Meu ano util</h1>
+        <h1>Meu ano útil</h1>
       </div>
       <div class="header-actions">
         <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Modo escuro</button>
         <button class="install-button" id="installBtn" type="button" hidden>Instalar app</button>
-        <button class="icon-button" id="exportBtn" type="button" title="Exportar dados" aria-label="Exportar dados">⬇</button>
-        <label class="icon-button file-action" title="Importar dados" aria-label="Importar dados">
-          ⬆
+        <button class="text-button" id="exportBtn" type="button" title="Exportar dados" aria-label="Exportar dados">Exportar</button>
+        <label class="text-button file-action" title="Importar dados" aria-label="Importar dados">
+          Importar
           <input id="importInput" type="file" accept="application/json" />
         </label>
         <button class="primary-button" id="todayBtn" type="button">Hoje</button>
@@ -57,16 +57,16 @@
         <article class="metric">
           <span>Escola restante</span>
           <strong id="schoolRemaining">0</strong>
-          <small id="schoolDone">0 presencas</small>
+          <small id="schoolDone">0 presenças</small>
         </article>
       </section>
 
       <section class="layout-grid">
-        <aside class="side-panel" aria-label="Configuracoes e contadores">
+        <aside class="side-panel" aria-label="Configurações e contadores">
           <div class="panel-section">
             <div class="section-title">
               <h2>Treinos por semana</h2>
-              <button class="ghost-button" id="resetScheduleBtn" type="button">Padrao</button>
+              <button class="ghost-button" id="resetScheduleBtn" type="button">Padrão</button>
             </div>
             <div class="weekday-editor" id="weekdayEditor"></div>
           </div>
@@ -87,24 +87,42 @@
 
           <div class="panel-section">
             <div class="section-title">
-              <h2>Evolucao</h2>
+              <h2>Evolução</h2>
             </div>
             <div class="settings-list">
               <label class="setting-row">
                 <span>Fracasso quando</span>
                 <select id="failureMode">
-                  <option value="all">Nao cumprir todas as metas</option>
-                  <option value="any">Nao fazer nenhuma atividade</option>
+                  <option value="all">Não cumprir todas as metas</option>
+                  <option value="any">Não fazer nenhuma atividade</option>
                 </select>
               </label>
               <label class="switch-row compact-switch">
                 <input id="includeOptionalCheck" type="checkbox" />
-                <span>Contar sabado opcional como meta</span>
+                <span>Contar sábado opcional como meta</span>
               </label>
               <label class="switch-row compact-switch">
                 <input id="autoOpenTodayCheck" type="checkbox" />
                 <span>Abrir o dia atual automaticamente</span>
               </label>
+              <div class="progress-chart" aria-label="Gráfico de evolução">
+                <div>
+                  <span>Completos</span>
+                  <strong id="chartCompleteLabel">0</strong>
+                  <div class="chart-track"><i id="chartCompleteBar"></i></div>
+                </div>
+                <div>
+                  <span>Fracassos</span>
+                  <strong id="chartFailedLabel">0</strong>
+                  <div class="chart-track"><i id="chartFailedBar" class="failed-bar"></i></div>
+                </div>
+                <div>
+                  <span>Pendentes</span>
+                  <strong id="chartPendingLabel">0</strong>
+                  <div class="chart-track"><i id="chartPendingBar" class="pending-bar"></i></div>
+                </div>
+              </div>
+              <div class="failure-list" id="failureList"></div>
             </div>
           </div>
 
@@ -115,23 +133,23 @@
             <div class="settings-list">
               <label class="switch-row compact-switch">
                 <input id="reminderCheck" type="checkbox" />
-                <span>Lembrar as 20h</span>
+                <span>Lembrar às 20h</span>
               </label>
-              <button class="ghost-button" id="notificationBtn" type="button">Permitir notificacoes</button>
-              <p class="status-text" id="notificationStatus">Notificacoes desativadas.</p>
+              <button class="ghost-button" id="notificationBtn" type="button">Permitir notificações</button>
+              <p class="status-text" id="notificationStatus">Notificações desativadas.</p>
             </div>
           </div>
 
           <div class="panel-section">
             <div class="section-title">
-              <h2>Campos diarios</h2>
+              <h2>Campos diários</h2>
             </div>
             <form class="field-form" id="fieldForm">
               <input id="fieldName" type="text" placeholder="Ex.: leitura, dieta, sono" maxlength="28" required />
               <select id="fieldType" aria-label="Tipo do campo">
-                <option value="checkbox">Sim/nao</option>
+                <option value="checkbox">Sim/não</option>
                 <option value="text">Texto</option>
-                <option value="number">Numero</option>
+                <option value="number">Número</option>
               </select>
               <button class="primary-button" type="submit">Adicionar</button>
             </form>
@@ -139,14 +157,14 @@
           </div>
         </aside>
 
-        <section class="calendar-panel" aria-label="Calendario do ano">
+        <section class="calendar-panel" aria-label="Calendário do ano">
           <div class="toolbar">
             <div class="segmented" role="tablist" aria-label="Filtro">
               <button class="active" data-filter="all" type="button">Todos</button>
               <button data-filter="pending" type="button">Pendentes</button>
               <button data-filter="done" type="button">Feitos</button>
             </div>
-            <input id="searchInput" type="search" placeholder="Buscar treino ou observacao" />
+            <input id="searchInput" type="search" placeholder="Buscar treino ou observação" />
           </div>
           <div id="calendar" class="calendar"></div>
         </section>
@@ -166,7 +184,7 @@
         <div class="dialog-grid">
           <label class="switch-row">
             <input id="gymCheck" type="checkbox" />
-            <span>Fui a academia</span>
+            <span>Fui à academia</span>
           </label>
           <label class="switch-row">
             <input id="kungFuCheck" type="checkbox" />
@@ -186,7 +204,7 @@
         <div id="dynamicFields" class="dynamic-fields"></div>
 
         <label class="field-block">
-          <span>Observacoes</span>
+          <span>Observações</span>
           <textarea id="notesInput" rows="4" placeholder="Como foi o dia? Algo importante?"></textarea>
         </label>
 

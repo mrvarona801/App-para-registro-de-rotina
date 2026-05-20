@@ -1,10 +1,10 @@
 const START_DATE = "2026-05-19";
 const END_DATE = "2026-12-31";
 const STORAGE_KEY = "ano-util-2026:v1";
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-const FULL_WEEKDAYS = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
+const FULL_WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const MONTHS = [
   "Janeiro",
   "Fevereiro",
@@ -70,7 +70,6 @@ const el = {
   kungFuDone: document.querySelector("#kungFuDone"),
   schoolRemaining: document.querySelector("#schoolRemaining"),
   schoolDone: document.querySelector("#schoolDone"),
-  progressPercent: document.querySelector("#progressPercent"),
   calendar: document.querySelector("#calendar"),
   weekdayEditor: document.querySelector("#weekdayEditor"),
   workoutStats: document.querySelector("#workoutStats"),
@@ -88,6 +87,13 @@ const el = {
   reminderCheck: document.querySelector("#reminderCheck"),
   notificationBtn: document.querySelector("#notificationBtn"),
   notificationStatus: document.querySelector("#notificationStatus"),
+  chartCompleteLabel: document.querySelector("#chartCompleteLabel"),
+  chartFailedLabel: document.querySelector("#chartFailedLabel"),
+  chartPendingLabel: document.querySelector("#chartPendingLabel"),
+  chartCompleteBar: document.querySelector("#chartCompleteBar"),
+  chartFailedBar: document.querySelector("#chartFailedBar"),
+  chartPendingBar: document.querySelector("#chartPendingBar"),
+  failureList: document.querySelector("#failureList"),
   dayDialog: document.querySelector("#dayDialog"),
   dayForm: document.querySelector("#dayForm"),
   dialogWeekday: document.querySelector("#dialogWeekday"),
@@ -139,7 +145,7 @@ function normalizeSchedule(saved = {}) {
 
 function normalizeFields(saved = []) {
   if (!Array.isArray(saved)) return [];
-  const labels = { checkbox: "Sim/nao", text: "Texto", number: "Numero" };
+  const labels = { checkbox: "Sim/não", text: "Texto", number: "Número" };
   return saved
     .filter((field) => field && typeof field === "object" && field.name)
     .map((field) => {
@@ -305,6 +311,7 @@ function render() {
   renderWeekdayEditor();
   renderCustomFields();
   renderSummary();
+  renderFailurePanel();
   renderWorkoutStats();
   renderKungFuStats();
   renderCalendar();
@@ -393,14 +400,55 @@ function renderSummary() {
   el.completeDays.textContent = completeCount;
   el.completeDaysDetail.textContent = `${evaluatedWithGoals.length} dias avaliados`;
   el.failedDays.textContent = failedCount;
-  el.failedDaysDetail.textContent = `${businessRemaining} dias uteis ainda incompletos`;
+  el.failedDaysDetail.textContent = `${businessRemaining} dias úteis ainda incompletos`;
   el.workoutsRemaining.textContent = workoutRemaining;
   el.workoutsDone.textContent = `${workoutDone} feitos de ${workoutDates.length}`;
   el.kungFuRemaining.textContent = kungFuRemaining;
-  el.kungFuDone.textContent = `${kungFuDone} feitos, ${optionalKungFuRemaining} sabados opcionais`;
+  el.kungFuDone.textContent = `${kungFuDone} feitos, ${optionalKungFuRemaining} sábados opcionais`;
   el.schoolRemaining.textContent = schoolRemaining;
-  el.schoolDone.textContent = `${schoolDone} presencas de ${businessDates.length}`;
-  el.progressPercent.textContent = `${progress}%`;
+  el.schoolDone.textContent = `${schoolDone} presenças de ${businessDates.length}`;
+}
+
+function evaluatedGoalDates() {
+  const today = parseDate(todayKey());
+  return getDates().filter((date) => date < today && plannedGoals(date).length > 0);
+}
+
+function renderFailurePanel() {
+  const evaluated = evaluatedGoalDates();
+  const complete = evaluated.filter((date) => dayStatus(date).complete);
+  const failed = evaluated.filter((date) => dayStatus(date).failed);
+  const pending = getDates().filter((date) => date >= parseDate(todayKey()) && plannedGoals(date).length > 0);
+  const max = Math.max(1, evaluated.length, pending.length);
+
+  el.chartCompleteLabel.textContent = complete.length;
+  el.chartFailedLabel.textContent = failed.length;
+  el.chartPendingLabel.textContent = pending.length;
+  el.chartCompleteBar.style.width = `${Math.round((complete.length / max) * 100)}%`;
+  el.chartFailedBar.style.width = `${Math.round((failed.length / max) * 100)}%`;
+  el.chartPendingBar.style.width = `${Math.round((pending.length / max) * 100)}%`;
+
+  if (!failed.length) {
+    el.failureList.innerHTML = `<div class="empty-state compact-empty">Nenhum fracasso registrado até agora.</div>`;
+    return;
+  }
+
+  el.failureList.innerHTML = failed
+    .slice(-8)
+    .reverse()
+    .map((date) => {
+      const key = formatDate(date);
+      const status = dayStatus(date);
+      return `<button class="failure-item" type="button" data-failure-date="${key}">
+        <span>${displayDate(key)}</span>
+        <strong>${status.done}/${status.total}</strong>
+      </button>`;
+    })
+    .join("");
+
+  el.failureList.querySelectorAll("[data-failure-date]").forEach((button) => {
+    button.addEventListener("click", () => openDay(button.dataset.failureDate));
+  });
 }
 
 function renderWorkoutStats() {
@@ -604,7 +652,7 @@ function addField(event) {
   const name = el.fieldName.value.trim();
   if (!name) return;
   const type = el.fieldType.value;
-  const labels = { checkbox: "Sim/nao", text: "Texto", number: "Numero" };
+  const labels = { checkbox: "Sim/não", text: "Texto", number: "Número" };
   state.fields.push({
     id: crypto.randomUUID(),
     name,
@@ -637,7 +685,7 @@ function importData(file) {
       saveState();
       render();
     } catch {
-      alert("Nao consegui importar esse arquivo.");
+      alert("Não consegui importar esse arquivo.");
     }
   });
   reader.readAsText(file);
@@ -754,11 +802,11 @@ function focusTodayOnStart() {
 
 async function requestNotificationPermission() {
   if (!("Notification" in window)) {
-    updateNotificationStatus("Este navegador nao liberou notificacoes.");
+    updateNotificationStatus("Este navegador não liberou notificações.");
     return;
   }
   const permission = await Notification.requestPermission();
-  updateNotificationStatus(permission === "granted" ? "Lembrete liberado para as 20h." : "Permissao de notificacao negada.");
+  updateNotificationStatus(permission === "granted" ? "Lembrete liberado para as 20h." : "Permissão de notificação negada.");
 }
 
 function updateNotificationStatus(message) {
@@ -767,11 +815,11 @@ function updateNotificationStatus(message) {
     return;
   }
   if (!state.reminderEnabled) {
-    el.notificationStatus.textContent = "Notificacoes desativadas.";
+    el.notificationStatus.textContent = "Notificações desativadas.";
     return;
   }
   if (!("Notification" in window)) {
-    el.notificationStatus.textContent = "Notificacoes indisponiveis neste navegador.";
+    el.notificationStatus.textContent = "Notificações indisponíveis neste navegador.";
     return;
   }
   el.notificationStatus.textContent =
@@ -797,7 +845,7 @@ async function checkReminder() {
   saveState();
   const title = "Preencher rotina de hoje";
   const options = {
-    body: "Registre academia, escola, kung fu e observacoes do dia.",
+    body: "Registre academia, escola, kung fu e observações do dia.",
     tag: `rotina-${currentToday}`,
     icon: "icons/icon-192.png",
   };
